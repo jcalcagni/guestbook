@@ -24,14 +24,6 @@
       :chsk/recv (message ev-msg)
       (default-event-handler ev-msg))))
 
-(defn connect! [url receive-handler]
-  (if-let [chan (js/WebSocket. url)]
-    (do
-      (set! (.-onmessage chan) (receive-message! receive-handler))
-      (reset! ws-chan chan))
-    (throw (js/Error. "Websocket connection failed!"))))	  
-	  
-	  
 (def router (atom nil))
 
 (defn stop-router! []
