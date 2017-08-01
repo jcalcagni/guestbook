@@ -1,7 +1,7 @@
 (ns guestbook.core
   (:require [reagent.core :as reagent :refer [atom]]
             [ajax.core :refer [GET]]
-			[guestbook.ws :as ws]))
+            [guestbook.ws :as ws]))
 
 (defn message-list [messages]
   [:ul.content
@@ -11,6 +11,7 @@
       [:time (.toLocaleString timestamp)]
       [:p message]
       [:p " - " name]])])
+
 
 (defn get-messages [messages]
   (GET "/messages"
@@ -22,42 +23,40 @@
     [:div.alert.alert-danger (clojure.string/join error)]))
 
 (defn message-form [fields errors]
-    [:div.content
-      [:div.form-group
-        [errors-component errors :name]
-        [:p "Name:"
-         [:input.form-control
-          {:type      :text
-           :on-change #(swap! fields assoc :name (-> % .-target .-value))
-           :value     (:name @fields)}]]
-        [errors-component errors :message]
-        [:p "Message:"
-         [:textarea.form-control
-          {:rows      4
-           :cols      50
-           :value     (:message @fields)
-           :on-change #(swap! fields assoc :message (-> % .-target .-value))}]]
-        [:input.btn.btn-primary
-         {:type     :submit
-          :on-click #(ws/send-message! [:guestbook/add-message @fields] 8000)
-          :value    "comment"}]]])
-		  
+  [:div.content
+   [:div.form-group
+    [errors-component errors :name]
+    [:p "Name:"
+     [:input.form-control
+      {:type      :text
+       :on-change #(swap! fields assoc :name (-> % .-target .-value))
+       :value     (:name @fields)}]]
+    [errors-component errors :message]
+    [:p "Message:"
+     [:textarea.form-control
+      {:rows      4
+       :cols      50
+       :value     (:message @fields)
+       :on-change #(swap! fields assoc :message (-> % .-target .-value))}]]
+    [:input.btn.btn-primary
+     {:type     :submit
+      :on-click #(ws/send-message! [:guestbook/add-message @fields] 8000)
+      :value    "comment"}]]])
+
 (defn response-handler [messages fields errors]
   (fn [{[_ message] :?data}]
     (if-let [response-errors (:errors message)]
-	  (reset! errors response-errors)
-	  (do
-	    (reset! errors nil)
-		(reset! fields nil)
-		(swap! messages conj message)))))
-
-		  
+      (reset! errors response-errors)
+      (do
+        (reset! errors nil)
+        (reset! fields nil)
+        (swap! messages conj message)))))
 
 (defn home []
   (let [messages (atom nil)
         errors   (atom nil)
-		fields   (atom nil)]
-	(ws/start-router! (response-handler messages fields errors))
+        fields   (atom nil)]
+    (ws/start-router! (response-handler messages fields errors))
     (get-messages messages)
     (fn []
       [:div
@@ -66,7 +65,7 @@
          [message-list messages]]]
        [:div.row
         [:div.span12
-         [message-form messages]]]])))
+         [message-form fields errors]]]])))
 
 (reagent/render
   [home]
